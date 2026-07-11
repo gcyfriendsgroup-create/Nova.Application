@@ -1,0 +1,38 @@
+{
+  "summary": "Nova backend regression + new-features verification: 41/41 pytest cases pass (100%). Verified new endpoints /auth/google (invalid session_id => 401 as required, missing body => 422), /register-push (returns 201 with {status: 'skipped'} using placeholder EMERGENT_PUSH_KEY, never 500, bad payload => 422), and send_push non-blocking hooks on send_message, follow, friend_request, and start_call (all still return 200 with correct payloads and in-app notifications still created even though push relay returns 401 upstream). Login password None guard verified: empty password rejected 400, wrong password rejected 400, valid path unchanged. Full regression across auth/register/me, users list/search/update, follow flow, friend request+accept, stories create/list (24h window + friends visibility), conversation DM dedupe, DM messages, group admin edit + promote, calls lifecycle (ringing/accepted/ended + direction), locations update + friends view, notifications read-all, and WebSocket message delivery + bad-token close all pass. Backend logs confirm push relay is being invoked and gracefully logged as 'non-blocking' WARNING with 401 upstream — no 500s on any Nova endpoint.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/auth/me (no header)", "issue": "Returns 403 (HTTPBearer default) instead of 401; cosmetic. Test accepts either."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/backend/tests/test_new_features.py",
+    "/app/test_reports/pytest/results.xml",
+    "/app/test_reports/pytest/new_features.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "server.py: /register-push and send_push both wrap httpx calls with broad try/except and return {'status':'skipped'} — correct non-blocking behavior verified in logs (401 from Emergent -> logged WARNING, endpoint still 200/201).",
+    "server.py: login() correctly guards `not user.get('password')` before verify_pw, preventing bcrypt crash on Google-created users where password=None.",
+    "server.py: /auth/google returns 401 on non-200 from Emergent session-data endpoint — matches spec.",
+    "Push client (`push_client = httpx.AsyncClient(...)`) is created at module import; note the client is never closed on shutdown. Non-blocking, but adding `await push_client.aclose()` to the shutdown handler would be cleaner (minor).",
+    "WebSocket at /api/ws/{token} relays any message with a 'target' field between authenticated peers — this is the intended path for WebRTC ICE/SDP signaling per the review request. Works, but there is no server-side validation that the sender is allowed to signal 'target' (e.g., they must be in an active call together). Consider gating this to active call participants to prevent arbitrary peer messaging."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_new_features.py (new — 17 tests)"
+  ],
+  "success_rate": {"backend": "100% (41/41)", "frontend": "not tested (backend-only request)"},
+  "seed_data_creation": "Reused alice@nova.app and bob@nova.app test accounts. Left TEST_-prefixed conversations/messages/calls in DB from test run (safely tagged).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Backend base: EXPO_PUBLIC_BACKEND_URL + /api. /auth/google requires a real Emergent session_id (cannot be automated); invalid session returns 401. /register-push and all send_push hooks degrade gracefully when EMERGENT_PUSH_KEY='placeholder' (401 upstream => WARNING log, endpoint responds normally). WebSocket at wss://<host>/api/ws/{jwt} now doubles as WebRTC signaling relay (any JSON with 'target' field is forwarded to that user's socket). Test files: /app/backend/tests/backend_test.py (core, 24 tests), /app/backend/tests/test_new_features.py (new features, 17 tests).",
+  "rca_of_issue": "N/A — no bugs found. All new features function as specified."
+}

@@ -1,0 +1,162 @@
+{
+  "app_name": "Nova",
+  "personality": "2 Material You / Expressive DARK (Adapted for Cosmic Theme)",
+  "personality_one_liner": "A cinematic, deeply personal space-themed communicator that adapts to the user's expression while remaining anchored in a cosmic navy void.",
+  "color": {
+    "surface": "#05070D",
+    "onSurface": "#FFFFFF",
+    "surfaceSecondary": "#111827",
+    "onSurfaceSecondary": "#D1D5DB",
+    "surfaceTertiary": "#1F2937",
+    "onSurfaceTertiary": "#9CA3AF",
+    "surfaceInverse": "#FFFFFF",
+    "onSurfaceInverse": "#05070D",
+    "brand": "#4F46E5",
+    "brandPrimary": "#4F46E5",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#8B5CF6",
+    "onBrandSecondary": "#FFFFFF",
+    "brandTertiary": "#1E1B4B",
+    "onBrandTertiary": "#E0E7FF",
+    "success": "#22C55E",
+    "onSuccess": "#FFFFFF",
+    "warning": "#F59E0B",
+    "onWarning": "#FFFFFF",
+    "error": "#EF4444",
+    "onError": "#FFFFFF",
+    "info": "#3B82F6",
+    "onInfo": "#FFFFFF",
+    "border": "#1F2937",
+    "borderStrong": "#374151",
+    "divider": "#1F2937"
+  },
+  "typography": {
+    "displayFontFamily": "SpaceGrotesk_500Medium",
+    "textFontFamily": "Figtree_400Regular",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24
+    }
+  },
+  "spacing": {
+    "rule": "Avoid dense layouts. Ensure 44x44pt minimum touch targets. Group related elements within floating tonal containers with generous inner padding (lg/xl). Apply safe area insets at all screen roots.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 6,
+    "md": 12,
+    "lg": 20,
+    "pill": 999
+  },
+  "shadow_tier": "0",
+  "navigation": "bottom_tabs",
+  "icon_set": "Phosphor",
+  "glassmorphism": {
+    "enabled": true,
+    "do's": [
+      "Use blur on bottom tab bar, sticky headers, and modal scrims.",
+      "Use frosted glass over the cosmic navy background for featured containers.",
+      "Pair blur with a translucent tinted base (≥75% opacity of surface) to maintain readability in dark mode."
+    ],
+    "dont's": [
+      "Do not blur standard chat bubbles or dense list items.",
+      "Do not use blur without a tint base.",
+      "Do not blur form inputs."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-glass-effect",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "Story",
+      "purpose": "A horizontal tray for active stories, opening into full-bleed immersive story viewing with auto-advancing progress bars.",
+      "states": {
+        "loading": "Centered space-themed spinner",
+        "empty": "Illustration of a telescope looking at empty space, prompt to 'Post a story'.",
+        "error": "Failed to load stories, retry button."
+      },
+      "layout": "Grid or horizontal scroll tray of friends' avatars with gradient rings (blue/purple) indicating unseen stories. Clicking expands to a full-screen view (similar to Instagram/Snapchat) with a top-to-bottom gradient scrim to protect header text."
+    },
+    {
+      "name": "Chat",
+      "purpose": "Discord-style messaging hub housing direct messages, group chats, and the actual conversation interfaces.",
+      "states": {
+        "loading": "Skeleton rows matching chat list.",
+        "empty": "Graphic of two isolated planets. 'Start a conversation'.",
+        "error": "Unable to connect to chat server. Retry."
+      },
+      "layout": "Index: List view of active DMs and Groups. Detail: Discord-style chat layout. Messages from the same user are clustered. Only the first message in a cluster shows the avatar and display name; subsequent messages are tightly packed vertically. Include an input bar at the bottom with a frosted glass background."
+    },
+    {
+      "name": "Calls",
+      "purpose": "Call history index and the active ringing screen experience.",
+      "states": {
+        "loading": "Skeleton list.",
+        "empty": "No recent calls.",
+        "error": "Call history unavailable."
+      },
+      "layout": "Index: Simple list of recent calls. Active Call View: Centered large avatar with reanimated pulsating/expanding concentric rings (blue and purple gradient) matching the ringtone frequency. Large rounded action buttons (Accept/Decline)."
+    },
+    {
+      "name": "Locations",
+      "purpose": "A live tracking map of friends.",
+      "states": {
+        "loading": "Map grid skeleton.",
+        "empty": "Map view with no friends sharing location.",
+        "error": "Failed to load map data."
+      },
+      "layout": "Full-bleed dark mode map background. Friends are represented by their avatars acting as map markers, with a pulsing 'live' indicator ring around them. Include a bottom sheet for location sharing settings (duration, opt-in/out)."
+    },
+    {
+      "name": "Settings (Gear)",
+      "purpose": "Global profile configuration, per-page color theming, permission toggles, and Discord-style ringtone selection.",
+      "states": {
+        "loading": "Skeleton of settings fields.",
+        "empty": "N/A",
+        "error": "Failed to load settings."
+      },
+      "layout": "Tonal list of options. Includes a color-picker for page customization, with a live preview card showing how text auto-contrasts. Toggles for Camera, Microphone, and Notification permissions."
+    }
+  ],
+  "images": {
+    "avatar_1": {
+      "url": "https://images.unsplash.com/photo-1508179522353-11ba468c4a1c",
+      "alt": "neon portrait gen z"
+    },
+    "avatar_2": {
+      "url": "https://images.unsplash.com/photo-1533461502717-83546f485d24",
+      "alt": "neon portrait woman"
+    },
+    "map_background_dark": {
+      "url": "https://images.unsplash.com/photo-1700574005887-47134ebde2ba?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2OTV8MHwxfHNlYXJjaHwxfHxhZXN0aGV0aWMlMjBtYXAlMjB2aWV3JTIwZGFyayUyMG1vZGV8ZW58MHx8fHwxNzgzMTk1NDM1fDA&ixlib=rb-4.1.0&q=85",
+      "alt": "dark mode map view aesthetic"
+    }
+  },
+  "instructions_to_main_agent": [
+    "COSMIC BRAND REQUIREMENT: The background must be navy-dark blue with 'little white star dots'. Implement this via a repeating SVG pattern or Skia canvas overlaid lightly on the root surface container of the app.",
+    "LOGO CREATION: Build a custom SVG component for the 'Nova Saturn' logo (a white Saturn ringed planet with two small orbiting dots, one blue, one purple). Use this on the splash screen and as a brand header.",
+    "COLOR CUSTOMIZATION & AUTO-CONTRAST: The user requested 'if a color is dark all text should be white and vice versa'. Implement a utility function (e.g., using luminance calculation) that takes the user's custom hex color and returns either '#FFFFFF' or '#05070D' for the text. Apply this dynamically to the screen container context.",
+    "CHAT LAYOUT (DISCORD STYLE): Implement message clustering. Compare consecutive messages; if the sender is the same and timestamp difference is small, hide the avatar/name on the subsequent messages and reduce the vertical spacing (gap: xs) to create a compact, unified block.",
+    "RING ANIMATION: On the incoming/outgoing call screen, use `react-native-reanimated` to create 2-3 expanding, fading concentric rings originating from the center avatar. Use the brand Primary (blue) and brand Secondary (purple) for the ring colors to match the cosmic theme.",
+    "BOTTOM TAB BAR: Implement EXACTLY 5 tabs: Story, Chat, Calls, Locations, Settings. Use a gear icon for Settings. The tab bar should have a blurred glassmorphism background to let the cosmic background subtly bleed through."
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "summary": "Frontend-only regression after deployment-config fix in /app/frontend/app.json (expo.ios.bundleIdentifier='com.nova.app', expo.android.package='com.nova.app', missing googleServicesFile reference removed). All target frontend flows still pass on mobile web preview @ 375x667. No new errors, no red screen, no regressions.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "React Native Web deprecations", "issue": "Console warnings (pre-existing, unrelated to app.json change): 'shadow*' style props deprecated (use boxShadow), 'textShadow*' style props deprecated (use textShadow), props.pointerEvents deprecated (use style.pointerEvents). Repo-wide sweep suggested but non-blocking."}
+    ]
+  },
+  "test_report_links": [
+    "/app/test_reports/iteration_3.json"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "app.json now includes ios.bundleIdentifier='com.nova.app' and android.package='com.nova.app' — resolves V3MobileConfigInvalid. googleServicesFile omission is correct given no google-services.json in repo; FCM push in a real Android native build will need a valid google-services.json before EAS build, but this does not affect web preview or the /api/register-push endpoint (returns 201 skipped with placeholder key).",
+    "No app.json fields required for web preview were altered; scheme/plugins/permissions all intact."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "not tested (per request)", "frontend": "100% (boot + login + tab shell + open DM + send message all verified)"},
+  "seed_data_creation": "One new message 'TEST_iter4_1783776491' appended to Alice↔Bob DM (safely prefixed).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Pure regression pass after app.json bundleIdentifier/package fix. Web preview: https://nova-orbit-1.preview.emergentagent.com. Verified: login screen renders with Nova branding + email/password + 'Continue with Google'; alice@nova.app/password123 login lands on /story with 5-tab shell (Story/Chat/Calls/Locations/Settings); Chat tab shows Bob and group convs; opening Bob navigates to /chat/{convId}; typing in [data-testid=\"message-input\"] and pressing Enter sends the message and it appears immediately in the thread. Console shows only benign warnings (expo-notifications web listener, RN Web shadow*/textShadow*/pointerEvents deprecations, navigator.vibrate blocked-before-user-gesture). Nothing new introduced by the config change.",
+  "rca_of_issue": "Original deployment error V3MobileConfigInvalid was caused by missing expo.ios.bundleIdentifier and expo.android.package in app.json, plus a reference to a non-existent googleServicesFile. Committed fix in /app/frontend/app.json addresses both. Regression testing confirms the running web preview is unaffected: AuthContext push-registration effect early-returns on Platform.OS==='web', so the removed googleServicesFile has no runtime impact on web. Native Android EAS builds will still require a real google-services.json to enable FCM, but that is a separate deploy-time concern, not a functional regression."
+}

@@ -1,0 +1,30 @@
+{
+  "summary": "Regression check after app.json deployment-config fix (added ios.bundleIdentifier='com.nova.app', android.package='com.nova.app', removed missing googleServicesFile). No regressions. Backend: 24/24 pytest cases pass (100%) on backend_test.py; all target endpoints (/api/auth/login, /api/auth/me, /api/conversations, /api/stories, /api/calls, /api/friends/requests, /api/locations/friends) return 200 for an authenticated Alice; /api/register-push returns 201 {status:'skipped'} with valid payload (placeholder EMERGENT_PUSH_KEY, degrades gracefully) and 422 with meaningful validation errors when required fields (user_id/platform/device_token) are missing. Frontend (mobile web preview @ 375x667): app boots without red screen or JS errors, login screen renders with Nova branding + email/password + Google; email/password login as alice@nova.app succeeds and lands on tabbed shell (Story/Chat/Calls/Locations/Settings). Chat tab lists conversations, Bob DM opens, sending a new message ('TEST_iter3_<ts>') succeeds and immediately appears in the thread. Push registration effect is gated by Platform.OS==='web' return-early in AuthContext, so removing googleServicesFile does not affect the running web preview; on native it will call POST /register-push which is confirmed non-blocking (201 skipped). Only console output was a benign 'navigator.vibrate blocked before user gesture' warning — not related to the config change.",
+  "backend_issues": {
+    "critical": [],
+    "minor": []
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": []
+  },
+  "test_report_links": [
+    "/app/backend/tests/backend_test.py",
+    "/app/test_reports/pytest/iter3_backend.xml"
+  ],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "app.json: bundleIdentifier and android.package now set to 'com.nova.app' — resolves V3MobileConfigInvalid. googleServicesFile correctly omitted (file not present); FCM push will not be usable in a native Android build until a real google-services.json is added, but this does not affect web preview or the register-push endpoint (which returns skipped with placeholder key).",
+    "AuthContext.tsx L157: push registration effect returns early on Platform.OS==='web', so the web build never touches expo-notifications native APIs — safe.",
+    "Login flow still uses correct EXPO_PUBLIC_BACKEND_URL; JWT stored and used across tabs; no regressions observed after config change."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (24/24)", "frontend": "100% (boot + login + chat + send-message flow verified)"},
+  "seed_data_creation": "None new. Reused alice@nova.app / bob@nova.app. One test message TEST_iter3_<ts> left in Alice↔Bob DM (safely prefixed).",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Regression-only iteration — no code changes made. Backend base: EXPO_PUBLIC_BACKEND_URL + /api. Web preview at https://nova-orbit-1.preview.emergentagent.com. Test users alice@nova.app / bob@nova.app (password123). register-push requires user_id, platform, device_token; returns 201 {status:'skipped'} with placeholder EMERGENT_PUSH_KEY. On native Android, real FCM will need a google-services.json committed and re-referenced in app.json before EAS build; unrelated to app functionality in preview.",
+  "rca_of_issue": "N/A — deployment config change (bundleIdentifier/package added, missing googleServicesFile reference removed) is fully backwards-compatible with the running web preview. All target flows unchanged."
+}
