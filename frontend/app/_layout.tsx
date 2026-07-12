@@ -1,16 +1,10 @@
-import { Tabs, Redirect } from "expo-router";
+import { Tabs } from "expo-router";
 import { useWindowDimensions } from "react-native";
 import NovaTabBar, { SIDEBAR_WIDTH } from "@/src/components/NovaTabBar";
-import { useAuth } from "@/src/AuthContext";
 
 export default function TabsLayout() {
   const { width } = useWindowDimensions();
   const desktop = width >= 900;
-  const { user, loading } = useAuth();
-
-  if (!loading && !user) {
-    return <Redirect href="/login" />;
-  }
 
   return (
     <Tabs
