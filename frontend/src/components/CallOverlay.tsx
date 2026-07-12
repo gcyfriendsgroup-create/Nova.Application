@@ -205,7 +205,7 @@ export default function CallOverlay() {
           </>
         )}
         {call.status === "active" && call.callType === "video" && call.localStream && (
-          <CallVideoView stream={call.localStream} mirrored style={styles.pip} />
+          <CallVideoView stream={call.localStream} mirrored style={styles.localVideoThumb} />
         )}
         {call.callType === "video" && call.videoOn && (
           <View style={styles.videoTag}>
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   ring: { position: "absolute", width: 220, height: 220, borderRadius: 110, borderWidth: 2 },
   groupGrid: { flexDirection: "row", flexWrap: "wrap", gap: S.lg, justifyContent: "center", maxWidth: 300 },
   gridName: { color: "#fff", fontSize: 12, marginTop: 4, maxWidth: 72, textAlign: "center" },
-  pip: {
+  localVideoThumb: {
     position: "absolute",
     top: 16,
     right: 16,

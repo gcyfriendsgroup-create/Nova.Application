@@ -15,6 +15,10 @@ export default function Index() {
     if (!navState?.key) return;
     if (loading) return;
 
+    // setTimeout(0) defers this to the next tick, after React has fully
+    // flushed and attached the navigator — the navState.key check alone
+    // isn't enough on every platform/build to guarantee the navigator is
+    // truly ready to accept a command in the same tick.
     const t = setTimeout(() => {
       if (user) router.replace("/(tabs)/story");
       else router.replace("/login");
