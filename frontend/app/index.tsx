@@ -13,10 +13,13 @@ export default function Index() {
 
   useEffect(() => {
     if (!navState?.key) return;
-    if (!loading) {
+    if (loading) return;
+
+    const t = setTimeout(() => {
       if (user) router.replace("/(tabs)/story");
       else router.replace("/login");
-    }
+    }, 0);
+    return () => clearTimeout(t);
   }, [navState?.key, loading, user]);
 
   return (
