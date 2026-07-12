@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { View, ActivityIndicator, StyleSheet, Text } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useRootNavigationState } from "expo-router";
 import { useAuth } from "@/src/AuthContext";
 import NovaLogo from "@/src/components/NovaLogo";
 import Starfield from "@/src/components/Starfield";
@@ -9,13 +9,15 @@ import { C } from "@/src/theme";
 export default function Index() {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const navState = useRootNavigationState();
 
   useEffect(() => {
+    if (!navState?.key) return;
     if (!loading) {
       if (user) router.replace("/(tabs)/story");
       else router.replace("/login");
     }
-  }, [loading, user]);
+  }, [navState?.key, loading, user]);
 
   return (
     <View style={styles.container} testID="splash-screen">
