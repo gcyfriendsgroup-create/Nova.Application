@@ -58,7 +58,8 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     if (loading) return;
     const inProtectedArea = segments[0] === "(tabs)";
     if (!user && inProtectedArea) {
-      router.replace("/login");
+      const t = setTimeout(() => router.replace("/login"), 0);
+      return () => clearTimeout(t);
     }
   }, [navState?.key, loading, user, segments]);
 

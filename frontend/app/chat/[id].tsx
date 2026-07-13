@@ -29,6 +29,8 @@ export default function ChatRoom() {
   const [text, setText] = useState("");
   const listRef = useRef<FlatList>(null);
 
+  const [loadError, setLoadError] = useState(false);
+
   const load = useCallback(async () => {
     try {
       const [c, m] = await Promise.all([
@@ -37,7 +39,15 @@ export default function ChatRoom() {
       ]);
       setConv(c);
       setMessages(m);
-    } catch {}
+      setLoadError(false);
+    } catch {
+      // Don't clear conv/messages on a failed refresh — a sleeping
+      // Render backend can make one request fail without anything
+      // actually being wrong with the conversation itself. Losing the
+      // real name/avatar/messages here was what caused everything to
+      // look "deleted" after a refresh.
+      setLoadError(true);
+    }
   }, [id]);
 
   useEffect(() => { load(); }, [load]);
@@ -51,14 +61,23 @@ export default function ChatRoom() {
     return () => { unsub(); };
   }, [subscribe, id]);
 
+  const [sendError, setSendError] = useState<string | null>(null);
+
   const send = async () => {
     const t = text.trim();
     if (!t) return;
-    setText("");
+    setSendError(null);
     try {
       const msg = await api.post(`/conversations/${id}/messages`, { text: t });
       setMessages((prev) => [...prev, msg]);
-    } catch {}
+      setText("");
+    } catch (e) {
+      // Keep the typed text so nothing is lost, and tell the person it
+      // failed instead of silently swallowing the error — a slow/sleeping
+      // backend (Render free tier) can make the very first request of a
+      // session fail or time out.
+      setSendError("Message didn't send — check your connection and try again.");
+    }
   };
 
   const bg = conv?.color && conv.color !== C.surface ? conv.color : (user?.chat_bg_color || C.surface);
@@ -143,6 +162,13 @@ export default function ChatRoom() {
         )}
       </View>
 
+      {loadError && (
+        <Pressable style={styles.errorBanner} onPress={load} testID="chat-load-retry">
+          <Ionicons name="refresh" size={16} color="#fff" />
+          <Text style={styles.errorBannerText}>Couldn't load this chat — tap to retry</Text>
+        </Pressable>
+      )}
+
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -159,6 +185,12 @@ export default function ChatRoom() {
             <Text style={[styles.empty, { color: dim }]}>No messages yet. Say something!</Text>
           }
         />
+        {sendError && (
+          <View style={styles.sendErrorBar}>
+            <Ionicons name="warning" size={14} color="#fca5a5" />
+            <Text style={styles.sendErrorText}>{sendError}</Text>
+          </View>
+        )}
         <View style={[styles.inputBar, { paddingBottom: insets.bottom || S.sm }]}>
           <TextInput
             style={styles.input}
@@ -180,6 +212,23 @@ export default function ChatRoom() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    backgroundColor: "#4F46E5",
+    paddingVertical: 8,
+    paddingHorizontal: S.md,
+  },
+  errorBannerText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  sendErrorBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: S.md,
+    paddingBottom: 4,
+  },
+  sendErrorText: { color: "#fca5a5", fontSize: 12 },
   header: {
     flexDirection: "row",
     alignItems: "center",

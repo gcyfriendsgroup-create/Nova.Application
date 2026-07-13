@@ -60,6 +60,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const connectWs = useCallback((token: string) => {
     if (wsRef.current) wsRef.current.close();
     const ws = new WebSocket(wsUrl(token));
+    let heartbeat: any = null;
+    ws.onopen = () => {
+      // Render's free tier (and many proxies) silently kill WebSocket
+      // connections after a short period of no data — without ever
+      // sending a proper close frame. That left calls stuck: the caller's
+      // connection would go quietly dead while waiting for the other
+      // person to pick up, so "call accepted" never arrived and nothing
+      // ever told the app to reconnect. A small ping every 25s keeps the
+      // connection active so it never goes idle in the first place.
+      heartbeat = setInterval(() => {
+        if (ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ event: "ping" }));
+        }
+      }, 25000);
+    };
     ws.onmessage = (e) => {
       try {
         const msg = JSON.parse(e.data);
@@ -67,6 +82,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch {}
     };
     ws.onclose = () => {
+      clearInterval(heartbeat);
       // simple reconnect
       setTimeout(() => {
         if (tokenRef.current) connectWs(tokenRef.current);

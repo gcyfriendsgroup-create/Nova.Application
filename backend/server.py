@@ -147,7 +147,7 @@ class ConnManager:
             try:
                 await ws.send_json(data)
             except Exception:
-                pass
+                self.active.pop(uid, None)
 
 
 manager = ConnManager()
