@@ -34,6 +34,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
 
   const timerRef = useRef<any>(null);
   const outTimeout = useRef<any>(null);
+  const inTimeout = useRef<any>(null);
   const endRef = useRef<any>(null);
   const pcRef = useRef<any>(null);
   const localRef = useRef<any>(null);
@@ -88,6 +89,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     Vibration.cancel();
     clearInterval(timerRef.current);
     clearTimeout(outTimeout.current);
+    clearTimeout(inTimeout.current);
     cleanupRTC();
     setStatus("idle");
     setPeer(null);
@@ -104,6 +106,7 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
   const goActive = useCallback(() => {
     Vibration.cancel();
     clearTimeout(outTimeout.current);
+    clearTimeout(inTimeout.current);
     setStatus("active");
     setSeconds(0);
     clearInterval(timerRef.current);
@@ -114,7 +117,10 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
     const unsub = subscribe((event: string, payload: any) => {
       if (event === "call_incoming") {
         setStatus((prev) => {
-          if (prev !== "idle") return prev;
+          if (prev !== "idle") {
+            console.log(`[call] incoming call ignored — status was "${prev}", not idle`);
+            return prev;
+          }
           setPeer({
             id: payload.caller.id,
             name: payload.caller.display_name,
@@ -123,6 +129,13 @@ export function CallProvider({ children }: { children: React.ReactNode }) {
           setCallId(payload.call.id);
           setCallType(payload.call.call_type);
           setVideoOn(payload.call.call_type === "video");
+          // If the caller's tab crashes/closes without ever sending
+          // call_declined/call_ended, this side could otherwise be stuck
+          // showing "incoming" (and blocking all future calls) forever.
+          clearTimeout(inTimeout.current);
+          inTimeout.current = setTimeout(() => {
+            endRef.current && endRef.current();
+          }, 45000);
           return "incoming";
         });
       } else if (event === "call_accepted") {
