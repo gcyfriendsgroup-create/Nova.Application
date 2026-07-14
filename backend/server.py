@@ -599,6 +599,9 @@ async def websocket_endpoint(ws: WebSocket, token: str):
     try:
         while True:
             data = await ws.receive_json()
+            if data.get("event") == "ping":
+                await ws.send_json({"event": "pong"})
+                continue
             # relay signaling events directly (e.g. call ICE / typing)
             target = data.get("target")
             if target:

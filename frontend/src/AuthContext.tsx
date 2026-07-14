@@ -61,32 +61,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (wsRef.current) wsRef.current.close();
     const ws = new WebSocket(wsUrl(token));
     let heartbeat: any = null;
+    let watchdog: any = null;
+    let lastSeen = Date.now();
+
+    const armWatchdog = () => {
+      clearInterval(watchdog);
+      // If nothing at all — not even our own pong — has come back in
+      // 20s, the connection is a "zombie": it looks open to the browser
+      // but the proxy in between (Render's free tier) has quietly
+      // stopped forwarding data without ever sending a close frame. In
+      // that state onclose may never fire on its own, so we force it.
+      watchdog = setInterval(() => {
+        if (Date.now() - lastSeen > 20000) {
+          ws.close();
+        }
+      }, 5000);
+    };
+
     ws.onopen = () => {
-      // Render's free tier (and many proxies) silently kill WebSocket
-      // connections after a short period of no data — without ever
-      // sending a proper close frame. That left calls stuck: the caller's
-      // connection would go quietly dead while waiting for the other
-      // person to pick up, so "call accepted" never arrived and nothing
-      // ever told the app to reconnect. A small ping every 25s keeps the
-      // connection active so it never goes idle in the first place.
+      lastSeen = Date.now();
+      armWatchdog();
+      // Ping every 8s — short enough to stay well under whatever idle
+      // timeout Render's proxy enforces, so the connection never goes
+      // quiet long enough to be silently dropped in the first place.
       heartbeat = setInterval(() => {
         if (ws.readyState === WebSocket.OPEN) {
           ws.send(JSON.stringify({ event: "ping" }));
         }
-      }, 25000);
+      }, 8000);
     };
     ws.onmessage = (e) => {
+      lastSeen = Date.now();
       try {
         const msg = JSON.parse(e.data);
+        if (msg.event === "pong") return;
         listeners.current.forEach((fn) => fn(msg.event, msg.payload));
       } catch {}
     };
     ws.onclose = () => {
       clearInterval(heartbeat);
+      clearInterval(watchdog);
       // simple reconnect
       setTimeout(() => {
         if (tokenRef.current) connectWs(tokenRef.current);
-      }, 3000);
+      }, 1000);
     };
     wsRef.current = ws;
   }, []);
