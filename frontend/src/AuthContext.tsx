@@ -35,6 +35,7 @@ interface AuthState {
   setUser: (u: User) => void;
   subscribe: (fn: Listener) => () => void;
   sendWs: (data: any) => void;
+  wsConnected: boolean;
 }
 
 const AuthContext = createContext<AuthState>({} as AuthState);
@@ -42,6 +43,7 @@ const AuthContext = createContext<AuthState>({} as AuthState);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef<WebSocket | null>(null);
   const listeners = useRef<Set<Listener>>(new Set());
   const tokenRef = useRef<string | null>(null);
@@ -59,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const connectWs = useCallback((token: string) => {
     if (wsRef.current) wsRef.current.close();
+    console.log("[ws] connecting…");
     const ws = new WebSocket(wsUrl(token));
     let heartbeat: any = null;
     let watchdog: any = null;
@@ -73,12 +76,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // that state onclose may never fire on its own, so we force it.
       watchdog = setInterval(() => {
         if (Date.now() - lastSeen > 20000) {
+          console.log("[ws] watchdog: no activity in 20s, forcing reconnect");
           ws.close();
         }
       }, 5000);
     };
 
     ws.onopen = () => {
+      console.log("[ws] connected");
+      setWsConnected(true);
       lastSeen = Date.now();
       armWatchdog();
       // Ping every 8s — short enough to stay well under whatever idle
@@ -90,15 +96,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }, 8000);
     };
+    ws.onerror = (e) => {
+      console.log("[ws] error", e);
+    };
     ws.onmessage = (e) => {
       lastSeen = Date.now();
       try {
         const msg = JSON.parse(e.data);
         if (msg.event === "pong") return;
+        console.log("[ws] received:", msg.event);
         listeners.current.forEach((fn) => fn(msg.event, msg.payload));
       } catch {}
     };
     ws.onclose = () => {
+      console.log("[ws] closed, reconnecting in 1s…");
+      setWsConnected(false);
       clearInterval(heartbeat);
       clearInterval(watchdog);
       // simple reconnect
@@ -253,6 +265,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser,
         subscribe,
         sendWs,
+        wsConnected,
       }}
     >
       {children}

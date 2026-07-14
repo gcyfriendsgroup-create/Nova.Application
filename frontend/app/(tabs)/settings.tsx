@@ -27,7 +27,7 @@ const SWATCHES = [
 ];
 
 export default function SettingsTab() {
-  const { user, logout, setUser } = useAuth();
+  const { user, logout, setUser, wsConnected } = useAuth();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [name, setName] = useState(user?.display_name || "");
@@ -197,6 +197,13 @@ export default function SettingsTab() {
           <Ionicons name="chevron-forward" size={20} color={C.muted} />
         </Pressable>
 
+        <View style={styles.wsStatus} testID="ws-status-indicator">
+          <View style={[styles.wsDot, { backgroundColor: wsConnected ? "#22C55E" : "#EF4444" }]} />
+          <Text style={styles.wsStatusText}>
+            {wsConnected ? "Live connection active" : "Reconnecting…"}
+          </Text>
+        </View>
+
         <Pressable style={styles.logout} onPress={logout} testID="logout-button">
           <Ionicons name="log-out-outline" size={20} color={C.error} />
           <Text style={{ color: C.error, fontWeight: "700", fontSize: 16 }}>Log out</Text>
@@ -252,6 +259,16 @@ const styles = StyleSheet.create({
   permRow: { flexDirection: "row", alignItems: "center", gap: S.md, paddingVertical: S.md },
   permText: { color: "#fff", fontSize: 16, flex: 1 },
   link: { flexDirection: "row", alignItems: "center", gap: S.md, paddingVertical: S.md, marginTop: S.sm },
+  wsStatus: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: S.lg,
+    marginBottom: S.sm,
+    paddingHorizontal: 4,
+  },
+  wsDot: { width: 8, height: 8, borderRadius: 4 },
+  wsStatusText: { color: C.muted, fontSize: 13 },
   logout: {
     flexDirection: "row",
     alignItems: "center",
